@@ -1,0 +1,6 @@
+{
+  "name": "CineForge AI: Autonomous Cinema Studio",
+  "description": "Production-grade autonomous cinema and YouTube movie studio featuring deterministic two-stage production, encrypted API key vault, 180-degree spatial stage layout, multi-track timeline, and 4K YouTube packaging.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
