@@ -61,6 +61,18 @@ def repo_slugs_at(path: Path) -> set[str]:
     return slugs
 
 
+def scrubbed_env() -> dict:
+    """Environment for sandboxed commands: no secret-looking variables.
+
+    GIT_CONFIG_COUNT/KEY_n/VALUE_n are an all-or-nothing group (git fails if only
+    part of it is present) and can carry credentials, so the whole group is dropped.
+    """
+    env = {k: v for k, v in os.environ.items()
+           if not _SECRET_ENV.search(k) and not k.startswith("GIT_CONFIG_")}
+    env["CI"] = "1"
+    return env
+
+
 class RepoPolicy:
     def __init__(self, root: Path, cfg: dict):
         prot = cfg.get("protection", {})
@@ -127,7 +139,8 @@ class RepoPolicy:
 
     @staticmethod
     def _git(args: list[str], cwd: Path):
-        subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True, timeout=300)
+        subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True,
+                       timeout=300, env=scrubbed_env())
 
     def run_tests(self, slug: str, workdir: Path) -> dict:
         cmd = self.repos[slug.lower()].get("test_command")
@@ -135,8 +148,7 @@ class RepoPolicy:
             return {"type": "no_test_command", "repo": slug,
                     "note": "no test_command configured for this repo"}
         argv = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
-        env = {k: v for k, v in os.environ.items() if not _SECRET_ENV.search(k)}
-        env["CI"] = "1"
+        env = scrubbed_env()
         t0 = time.time()
         try:
             r = subprocess.run(argv, cwd=workdir, env=env, capture_output=True, text=True,

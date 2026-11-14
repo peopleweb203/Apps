@@ -400,6 +400,9 @@ def _cli(argv=None):
     sp.add_argument("--risk", default="low", choices=["low", "medium", "high"])
     sp.add_argument("--instructions", default="")
     sp.add_argument("--allow-borrow", action="store_true")
+    sp.add_argument("--repo", help="allowed repo slug the task works on (sandbox clone)")
+    sp.add_argument("--provider", help="provider name from workforce_config.yaml")
+    sp.add_argument("--qa-report", action="store_true", help="deliverable is a test report (pass or fail)")
     sp = sub.add_parser("run", help="process ready tasks, then exit")
     sp.add_argument("--max-tasks", type=int)
     sub.add_parser("status")
@@ -430,8 +433,15 @@ def _cli(argv=None):
                                 idempotency_key=key, depends_on=deps, actor="seed", **t)
             print(ids[key], key)
     elif args.cmd == "submit":
+        payload = {"instructions": args.instructions}
+        if args.repo:
+            payload["repo"] = args.repo
+        if args.provider:
+            payload["provider"] = args.provider
+        if args.qa_report:
+            payload.update(requires_test_evidence=True, qa_report=True)
         print(o.submit(args.team, args.title, args.capability, action=args.action, risk=args.risk,
-                       payload={"instructions": args.instructions}, allow_borrow=args.allow_borrow))
+                       payload=payload, allow_borrow=args.allow_borrow))
     elif args.cmd == "run":
         print(json.dumps(o.run(max_tasks=args.max_tasks)))
     elif args.cmd == "status":
