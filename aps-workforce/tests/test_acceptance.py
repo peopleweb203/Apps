@@ -22,16 +22,21 @@ from agent_runner import WorkspaceViolation  # noqa: E402
 from approval_manager import ACCEPT_RESULT, CHARGEABLE, ESCALATION  # noqa: E402
 from orchestrator import Orchestrator  # noqa: E402
 
-TINA = (ROOT.parent / "aps-tina").resolve()
+import os  # noqa: E402
+
+_CANDS = [ROOT.parent / "aps-tina", ROOT.parent.parent / "aps-tina"] + \
+         [Path(p) for p in os.environ.get("APS_PROTECTED_PATHS", "").split(os.pathsep) if p]
+TINA = next((p.resolve() for p in _CANDS if (p / ".git").exists()), (ROOT.parent / "aps-tina").resolve())
 
 
 def tina_fingerprint() -> str | None:
-    """HEAD + working-tree status + hash of every tracked/untracked file's bytes."""
+    """HEAD + status + every branch/ref + stashes + hash of every tracked/untracked file."""
     if not (TINA / ".git").exists():
         return None
     git = lambda *a: subprocess.run(["git", "-C", str(TINA), *a], capture_output=True,  # noqa: E731
                                     text=True, check=True).stdout
-    h = hashlib.sha256((git("rev-parse", "HEAD") + git("status", "--porcelain")).encode())
+    h = hashlib.sha256((git("rev-parse", "HEAD") + git("status", "--porcelain")
+                        + git("for-each-ref") + git("stash", "list")).encode())
     for f in sorted(git("ls-files", "-co", "--exclude-standard").splitlines()):
         p = TINA / f
         if p.is_file():

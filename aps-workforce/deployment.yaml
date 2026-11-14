@@ -1,0 +1,157 @@
+# APS engineering deployment v1 - which roles own which work, on which repos,
+# what they may do alone, and what always needs the owner's approval.
+#
+# Validate:  python3 orchestrator.py deploy plan
+# Activate:  python3 orchestrator.py deploy apply     (idempotent; queues the first tasks)
+#
+# Nothing here grants access. Enforcement lives in workforce_config.yaml
+# (approval_required_actions, budget, protection, repos) and in the code.
+
+deployment:
+  name: aps-engineering-v1
+  owner_approval_required_for:      # must all be approval-required in workforce_config.yaml
+    - purchase
+    - production_deploy
+    - production_merge
+    - push_branch
+    - security_change
+    - credential_change
+    - destructive_action
+    - delete_original_data
+    - external_communication
+    - publish_content
+    - contract_commitment
+    - irreversible
+  autonomous_actions:               # must all be preauthorized in workforce_config.yaml
+    - analysis
+    - research
+    - draft
+    - test
+    - documentation
+    - local_file_change             # only inside the team's sandbox clone / workspace
+  never:                            # no approval path exists for these
+    - any work on peopleweb203/aps-tina (protected repository)
+    - writing outside the team workspace
+    - storing secrets in tasks, logs, artifacts or commits
+
+assignments:
+  - id: qa_testing
+    title: QA testing
+    team: software_factory
+    roles: [qa_engineer]
+    repos: [peopleweb203/aps-bitrix24-integration, peopleweb203/Apps]
+    provider: local_test            # real test runs, no model, $0
+    first_tasks:
+      - key: deploy-qa-bitrix-001
+        title: Run the Bitrix24 integration test suite and report
+        capability: testing
+        action: test
+        risk: low
+        priority: 20
+        payload: {repo: peopleweb203/aps-bitrix24-integration, requires_test_evidence: true, qa_report: true}
+      - key: deploy-qa-workforce-001
+        title: Run the APS workforce's own test suite and report
+        capability: testing
+        action: test
+        risk: low
+        priority: 15
+        payload: {repo: peopleweb203/Apps, requires_test_evidence: true, qa_report: true}
+
+  - id: software_completion
+    title: APS software completion
+    team: software_factory
+    roles: [lead_engineer, frontend_developer, backend_developer]
+    repos: [peopleweb203/Apps, peopleweb203/citizens-wealth-platform, peopleweb203/citizens-wealth-platform2, peopleweb203/paranormal-spooky-graveyard]
+    needs: [model_provider]
+    limits: [coding_agent_adapter]
+    first_tasks:
+      - key: deploy-sw-001
+        title: Release-readiness audit of every allowed APS repo (rank by closeness to customer-ready)
+        capability: release_readiness
+        action: analysis
+        risk: low
+        priority: 10
+        payload:
+          instructions: >
+            For each allowed repo: what exists, what builds, what is tested, what is missing for a
+            customer-ready release. LocalVerse, APS Marketplace and Community One source has not been
+            located yet - list where to look. Never touch aps-tina.
+
+  - id: code_recovery
+    title: Code recovery
+    team: infrastructure_intelligence
+    roles: [documentation_auditor]
+    repos: []
+    needs: [model_provider, access_to_lovable_hercules_drive_exports]
+    first_tasks:
+      - key: deploy-rec-001
+        title: Source-recovery inventory for LocalVerse, APS Marketplace and Community One
+        capability: source_recovery
+        action: analysis
+        risk: low
+        priority: 10
+        payload:
+          instructions: >
+            Build the inventory of where each app's source may live (GitHub, Lovable, Hercules, Drive,
+            local machines), what evidence confirms each copy, and which copy is the source of truth.
+            Read-only. Recovered code goes to a NEW repo or branch, never over an existing one.
+
+  - id: crm_integration
+    title: CRM integration (Bitrix24)
+    team: software_factory
+    roles: [integration_engineer]
+    repos: [peopleweb203/aps-bitrix24-integration]
+    needs: [model_provider]
+    limits: [coding_agent_adapter]
+    first_tasks:
+      - key: deploy-crm-001
+        title: Bitrix24 go-live gap list (offline; no portal or Supabase connection)
+        capability: integration
+        action: analysis
+        risk: medium
+        priority: 10
+        depends_on_keys: [deploy-qa-bitrix-001]
+        payload:
+          repo: peopleweb203/aps-bitrix24-integration
+          instructions: >
+            From the repo's README go-live steps and docs/CRM_DESIGN.md, list what is untested
+            (edge functions, SQL migration, portal verify/apply) and a safe order to test each in a
+            sandbox. Connecting to a real portal, running `apply`, or setting webhooks/secrets needs
+            the owner's approval. Consumer financing stays switched off.
+
+  - id: resource_optimization
+    title: Resource optimization
+    team: infrastructure_intelligence
+    roles: [operations_director, resource_researcher, automation_engineer]
+    repos: []
+    needs: [model_provider]
+    first_tasks:
+      - key: deploy-res-001
+        title: AI subscription and free-credit inventory with a lean usage plan ($1/task, $5/day)
+        capability: resource_research
+        action: research
+        risk: low
+        priority: 10
+        payload:
+          requires_sources: true
+          instructions: >
+            Inventory existing plans (Claude, Gemini/AI Studio, GitHub, Lovable, Hercules) and free
+            tiers; record limits with source URL and date. Names only, never keys. No signups.
+
+  - id: documentation
+    title: Documentation
+    team: infrastructure_intelligence
+    roles: [documentation_auditor]
+    repos: [peopleweb203/Apps, peopleweb203/aps-bitrix24-integration, peopleweb203/citizens-wealth-platform, peopleweb203/paranormal-spooky-graveyard]
+    needs: [model_provider]
+    first_tasks:
+      - key: deploy-doc-001
+        title: Documentation audit - does each repo's README match what the repo actually contains?
+        capability: documentation_audit
+        action: documentation
+        risk: low
+        priority: 5
+        payload:
+          instructions: >
+            For each allowed repo, compare README claims with the files present and flag gaps.
+            Propose edits as drafts in the workspace; do not commit to any repo.

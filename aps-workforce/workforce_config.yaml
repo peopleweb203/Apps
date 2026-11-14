@@ -43,6 +43,10 @@ approval_required_actions:
   - credential_change
   - publish_content
   - irreversible
+  - production_merge        # merging/pushing to main or any release branch
+  - security_change         # auth, RLS, permissions, secrets, CI credentials
+  - destructive_action      # force-push, history rewrite, dropping data, mass delete
+  - push_branch             # publishing a workforce/* branch to GitHub
 
 # Reversible, low-risk actions inside the team workspace. Any action that is
 # in neither list is treated as approval-required (default deny).
@@ -59,9 +63,38 @@ paths:
   workspaces: workspaces
   shared_reference: shared_reference
   reports: reports
-  # Never writable by any agent, regardless of task.
+  # Never writable by any agent, regardless of task. These are candidate
+  # locations of Tina's checkout; ones that don't exist are ignored. Add your
+  # machine's real path here, or set APS_PROTECTED_PATHS (os.pathsep-separated).
   protected_paths:
-    - ../aps-tina
+    - ../aps-tina          # workforce checked out next to aps-tina
+    - ../../aps-tina       # workforce inside the Apps repo, Apps next to aps-tina
+
+protection:
+  # Protection by repository IDENTITY (git remote), wherever the clone lives.
+  # Tina's source of truth: github.com/peopleweb203/aps-tina (active branches:
+  # main, antigravity/tina-core-fixes, antigravity/tina-next, claude/tina-auth-tests,
+  # claude/tina-docs, claude/tina-live-test, claude/tina-tasks).
+  protected_repos:
+    - peopleweb203/aps-tina
+  test_timeout_seconds: 600
+
+# Repos the workforce MAY work on - always in a private sandbox clone on a
+# workforce/<task_id> branch with pushing disabled. test_command comes from
+# here only (never from a task or a model).
+repos:
+  peopleweb203/aps-bitrix24-integration:
+    purpose: Bitrix24 CRM integration for APS Marketing, LocalVerse, financing referrals
+    test_command: npm test
+  peopleweb203/Apps:
+    purpose: CineForge AI scaffold + this workforce
+    test_command: python3 -m unittest discover -s aps-workforce/tests
+  peopleweb203/citizens-wealth-platform:
+    purpose: Citizens Wealth platform (README only so far)
+  peopleweb203/citizens-wealth-platform2:
+    purpose: Citizens Wealth platform v2 (empty so far)
+  peopleweb203/paranormal-spooky-graveyard:
+    purpose: Paranormal Spooky Graveyard (README only so far)
 
 providers:
   default: mock
@@ -74,6 +107,10 @@ providers:
     chargeable: true
     verified: true
     est_cost_usd: 0.25
+  local_test:             # runs a repo's configured tests in a sandbox; no model, no cost
+    kind: local_test
+    chargeable: false
+    verified: true
   anthropic:
     kind: anthropic
     chargeable: true

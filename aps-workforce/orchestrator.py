@@ -22,6 +22,7 @@ import yaml
 from agent_runner import (FatalError, RecoverableError, WorkspaceGuard, build_adapters,
                           build_prompt, render_artifact, validate)
 from approval_manager import ACCEPT_RESULT, CHARGEABLE, ESCALATION, ApprovalManager
+from repo_sandbox import RepoPolicy, RepoPolicyError
 from resource_budget import ResourceBudget
 from task_queue import AGENT_REST, Claim, TaskQueue
 
@@ -45,7 +46,11 @@ class Orchestrator:
         self.workspaces = self.root / paths["workspaces"]
         self.shared_ref = self.root / paths["shared_reference"]
         self.reports_dir = self.root / paths["reports"]
-        self.protected = [(self.root / p).resolve() for p in paths.get("protected_paths", [])]
+        self.policy = RepoPolicy(self.root, self.cfg)
+        for p in (self.root, self.workspaces):
+            why = self.policy.is_protected(p)
+            if why:
+                raise ConfigError(f"refusing to start: {p} is {why}")
         db = Path(db_path or self.root / paths["state_db"])
         db.parent.mkdir(parents=True, exist_ok=True)
         self.teams = self.cfg["teams"]
@@ -55,6 +60,9 @@ class Orchestrator:
         self.approvals = ApprovalManager(self.store, self.cfg)
         self.budget = ResourceBudget(self.store, self.approvals, self.cfg["budget"])
         self.adapters = build_adapters(self.cfg["providers"])
+        for ad in self.adapters.values():
+            if hasattr(ad, "ctx"):
+                ad.ctx = {"policy": self.policy, "workspaces": self.workspaces}
         self.default_provider = self.cfg["providers"]["default"]
         self.max_slots = int(self.cfg["concurrency"]["max_slots"])
         self.lease = float(self.cfg["leases"]["duration_seconds"])
@@ -94,11 +102,17 @@ class Orchestrator:
         prov = (kw.get("payload") or {}).get("provider")
         if prov and prov not in self.adapters:
             raise ConfigError(f"unknown provider {prov}")
+        repo = (kw.get("payload") or {}).get("repo")
+        if repo:
+            try:
+                self.policy.check_repo_allowed(repo)
+            except RepoPolicyError as e:
+                raise ConfigError(str(e)) from e
         kw.setdefault("max_attempts", int(self.cfg["retries"]["max_attempts"]))
         return self.store.submit(team=team, title=title, capability=capability, **kw)
 
     def guard(self, team: str) -> WorkspaceGuard:
-        return WorkspaceGuard(self.workspaces, team, self.shared_ref, self.protected)
+        return WorkspaceGuard(self.workspaces, team, self.shared_ref, self.policy)
 
     # ------------------------------------------------------------ claiming
     def claim(self, worker: str) -> Claim | None:
@@ -337,6 +351,8 @@ class Orchestrator:
             "pending_approvals": [{k: a[k] for k in ("id", "task_id", "action", "reason")}
                                   for a in self.approvals.pending()],
             "budget": self.budget.summary(),
+            "protection": {"protected_repos": sorted(self.policy.protected_repos),
+                           "protected_paths_found": [str(p) for p in self.policy.existing_protected_paths()]},
         }
 
     def daily_report(self) -> Path:
@@ -394,6 +410,9 @@ def _cli(argv=None):
         sp.add_argument("--by", required=True, help="your name (humans only)")
         sp.add_argument("--note", default="")
     sub.add_parser("report", help="write today's markdown report")
+    sp = sub.add_parser("deploy", help="validate (plan) or activate (apply) deployment.yaml")
+    sp.add_argument("mode", choices=["plan", "apply"])
+    sp.add_argument("--file", default=str(ROOT / "deployment.yaml"))
     sp = sub.add_parser("show", help="show one task with its audit trail")
     sp.add_argument("task_id")
     args = ap.parse_args(argv)
@@ -424,6 +443,10 @@ def _cli(argv=None):
         print(json.dumps(fn(args.approval_id, args.by, args.note), indent=2, default=str))
     elif args.cmd == "report":
         print(o.daily_report())
+    elif args.cmd == "deploy":
+        from deployment import Deployment
+        d = Deployment(o, Path(args.file))
+        print(json.dumps(d.plan() if args.mode == "plan" else d.apply(), indent=2))
     elif args.cmd == "show":
         print(json.dumps({"task": o.store.task(args.task_id),
                           "artifacts": o.store.artifacts(args.task_id),

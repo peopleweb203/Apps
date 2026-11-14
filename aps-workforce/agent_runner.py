@@ -31,18 +31,20 @@ class WorkspaceViolation(PermissionError):
 
 # ---------------------------------------------------------------- workspace isolation
 class WorkspaceGuard:
-    def __init__(self, workspaces_root: Path, team: str, shared_reference: Path,
-                 protected: list[Path]):
+    def __init__(self, workspaces_root: Path, team: str, shared_reference: Path, policy):
         self.root = (workspaces_root / team).resolve()
+        self.policy = policy
+        why = policy.is_protected(self.root)
+        if why:
+            raise WorkspaceViolation(f"team workspace {self.root} is {why}")
         self.root.mkdir(parents=True, exist_ok=True)
         self.shared = shared_reference.resolve()
-        self.protected = [p.resolve() for p in protected]
 
     def _resolve_write(self, rel: str) -> Path:
         p = (self.root / rel).resolve()
-        for prot in self.protected:
-            if p == prot or prot in p.parents:
-                raise WorkspaceViolation(f"write to protected path refused: {p}")
+        why = self.policy.is_protected(p)
+        if why:
+            raise WorkspaceViolation(f"write refused: {p} is {why}")
         if self.root not in p.parents:
             raise WorkspaceViolation(f"write outside team workspace refused: {p}")
         return p
@@ -204,7 +206,55 @@ class AnthropicAdapter:
         return text.strip().upper().startswith("PASS"), text.strip()[:2000]
 
 
-ADAPTERS = {"mock": MockAdapter, "anthropic": AnthropicAdapter}
+class LocalTestAdapter:
+    """Runs a repo's configured test command in a private sandbox clone.
+
+    No model, no network, no cost. Output is REAL evidence (not simulated):
+    the command, exit code, commit and output tail. Used by QA roles.
+    Requires payload.repo (an allowed, non-protected repo slug).
+    """
+    kind = "local_test"
+    chargeable = False
+    verified = True
+
+    def __init__(self, name: str, cfg: dict):
+        self.name = name
+        self.calls = 0
+        self.ctx = None   # set by the orchestrator: {"policy", "workspaces"}
+
+    def available(self, mode: str) -> tuple[bool, str]:
+        return (self.ctx is not None), "local test runner"
+
+    def estimate(self, task: dict, agent: dict) -> tuple[str, float]:
+        return "local-test-runner", 0.0
+
+    def run(self, task: dict, agent: dict, prompt: str) -> AdapterResult:
+        from repo_sandbox import RepoPolicyError
+        self.calls += 1
+        slug = task["payload"].get("repo")
+        if not slug:
+            raise FatalError("local_test tasks need payload.repo")
+        policy = self.ctx["policy"]
+        try:
+            work = policy.prepare(self.ctx["workspaces"] / task["team"], task["id"], slug)
+        except RepoPolicyError as e:
+            raise FatalError(str(e)) from e
+        ev = policy.run_tests(slug, work)
+        verdict = {0: "PASSED"}.get(ev.get("exit_code"), "FAILED") if ev["type"] == "test_run" else "NOT RUN"
+        text = (f"# Test report: {slug}\n\nVerdict: **{verdict}**\n\n"
+                f"- Commit: `{ev.get('commit', '-')}`\n- Command: `{ev.get('command', '-')}`\n"
+                f"- Exit code: {ev.get('exit_code', '-')}\n- Duration: {ev.get('duration_seconds', '-')}s\n"
+                f"- Sandbox: `{work}` (branch workforce/{task['id']}, push disabled)\n\n"
+                f"## Output (tail)\n\n```\n{ev.get('output_tail', ev.get('note', ''))}\n```\n")
+        return AdapterResult(text, "local-test-runner", 0.0, ev, simulated=False)
+
+    def review(self, task: dict, output: str, reviewer: dict) -> tuple[bool, str]:
+        self.calls += 1
+        ok = '"type": "test_run"' in output.splitlines()[0] and "Exit code:" in output
+        return ok, f"{reviewer['title']}: {'PASS' if ok else 'FIX'} - automated check that the report carries test-run evidence"
+
+
+ADAPTERS = {"mock": MockAdapter, "anthropic": AnthropicAdapter, "local_test": LocalTestAdapter}
 
 
 def build_adapters(providers_cfg: dict) -> dict:
@@ -233,12 +283,15 @@ def validate(task: dict, res: AdapterResult, mode: str) -> list[str]:
     if not res.text.strip():
         problems.append("empty output")
     p = task["payload"]
+    ev = res.evidence or {}
     if p.get("requires_test_evidence"):
-        ev = res.evidence or {}
-        if mode == "live" and not (ev.get("type") == "test_run" and ev.get("exit_code") == 0):
-            problems.append("software claim without passing test-run evidence")
-        if mode != "live" and not ev:
-            problems.append("missing test evidence")
+        if ev.get("type") == "test_run":
+            # A QA report is a valid deliverable whether tests pass or fail;
+            # a "this works" claim needs a passing run.
+            if not p.get("qa_report") and ev.get("exit_code") != 0:
+                problems.append(f"tests failed (exit {ev.get('exit_code')}); cannot claim the software works")
+        elif mode == "live" or not ev:
+            problems.append("software claim without test-run evidence")
     if p.get("requires_sources"):
         if not res.sources:
             problems.append("lead/research output without sources")
