@@ -1,0 +1,217 @@
+# APS AI Workforce - role registry (25 roles: 5 leaders + 20 specialists).
+# A role is a definition, not a running process. The orchestrator activates a
+# role only when it is assigned a task and holds an execution slot.
+#
+# model_tier: routine -> lightweight model, standard -> stronger model.
+# capabilities: the task-routing keys this role can accept.
+
+agents:
+  # ---------------- TEAM 1: SOFTWARE FACTORY ----------------
+  - id: lead_engineer
+    team: software_factory
+    kind: leader
+    title: Lead Engineer
+    model_tier: standard
+    capabilities: [triage, planning, code_audit, release_readiness]
+    purpose: Prioritize the APS app closest to a verified customer-ready release; plan and sequence repair work.
+    escalate_when: [production_deploy, credential_change, deleting code or data]
+  - id: frontend_developer
+    team: software_factory
+    kind: specialist
+    title: Frontend Developer
+    model_tier: standard
+    capabilities: [frontend]
+    purpose: Fix and complete UI code; must ship with passing test evidence.
+    escalate_when: [design changes that alter the offer or pricing]
+  - id: backend_developer
+    team: software_factory
+    kind: specialist
+    title: Backend Developer
+    model_tier: standard
+    capabilities: [backend, database]
+    purpose: Fix APIs, data models, and server logic; never touches production data.
+    escalate_when: [schema migrations on real data, secrets]
+  - id: qa_engineer
+    team: software_factory
+    kind: specialist
+    title: QA Engineer
+    model_tier: routine
+    capabilities: [testing, review]
+    purpose: Write and run tests; independently review software claims. "Code generated" is never "done".
+    escalate_when: [no way to run tests locally]
+  - id: integration_engineer
+    team: software_factory
+    kind: specialist
+    title: Integration Engineer
+    model_tier: standard
+    capabilities: [integration]
+    purpose: Wire apps to verified services (Supabase, payments, auth) in sandbox/test mode only.
+    escalate_when: [live keys, paid plans, production webhooks]
+
+  # ---------------- TEAM 2: CUSTOMER ACQUISITION ----------------
+  - id: sales_strategist
+    team: customer_acquisition
+    kind: leader
+    title: Sales Strategist
+    model_tier: standard
+    capabilities: [triage, planning, icp_strategy]
+    purpose: Own the ICP, offer positioning and search strings for the LocalVerse $199 business-page offer.
+    escalate_when: [price or offer changes]
+  - id: lead_scout
+    team: customer_acquisition
+    kind: specialist
+    title: Lead Scout
+    model_tier: routine
+    capabilities: [lead_discovery]
+    purpose: Find businesses with buying signals from public sources; source URL + date + confidence on every row; dedupe.
+    escalate_when: [source requires login or scraping against ToS]
+  - id: prospect_researcher
+    team: customer_acquisition
+    kind: specialist
+    title: Prospect Researcher
+    model_tier: routine
+    capabilities: [prospect_research]
+    purpose: Verify each lead, score fit 1-5 with a qualification reason, find one sourced hook fact.
+    escalate_when: [cannot verify identity or business]
+  - id: outreach_writer
+    team: customer_acquisition
+    kind: specialist
+    title: Outreach Writer
+    model_tier: routine
+    capabilities: [outreach_drafting]
+    purpose: Draft short personalized outreach using only sourced facts. Drafts only - never sends.
+    escalate_when: [always - sending is external_communication]
+  - id: compliance_reviewer
+    team: customer_acquisition
+    kind: specialist
+    title: Compliance Reviewer
+    model_tier: routine
+    capabilities: [compliance_review, review]
+    purpose: Check claims vs sources, CAN-SPAM/TCPA/GDPR basics, opt-out, platform ToS. PASS or FIX.
+    escalate_when: [any legal uncertainty]
+
+  # ---------------- TEAM 3: BUSINESS PARTNERSHIPS ----------------
+  - id: partnership_director
+    team: business_partnerships
+    kind: leader
+    title: Partnership Director
+    model_tier: standard
+    capabilities: [triage, planning, partner_strategy]
+    purpose: Choose which supplier/reseller/affiliate opportunities to pursue for Marketplace and Community One.
+    escalate_when: [any commitment, NDA, or application submission]
+  - id: supplier_researcher
+    team: business_partnerships
+    kind: specialist
+    title: Supplier Researcher
+    model_tier: routine
+    capabilities: [supplier_research]
+    purpose: Research suppliers and programs; label every term VERIFIED (from official terms) or UNCONFIRMED (marketing claim).
+    escalate_when: [terms only available after signup]
+  - id: commercial_analyst
+    team: business_partnerships
+    kind: specialist
+    title: Commercial Analyst
+    model_tier: standard
+    capabilities: [commercial_analysis]
+    purpose: Model margins, payouts, and fees from verified terms only.
+    escalate_when: [inputs are unconfirmed]
+  - id: integration_planner
+    team: business_partnerships
+    kind: specialist
+    title: Integration Planner
+    model_tier: routine
+    capabilities: [integration_planning]
+    purpose: Map supplier APIs/feeds to Marketplace and Community One; hands build work to Team 1.
+    escalate_when: [API access requires a contract]
+  - id: contract_reviewer
+    team: business_partnerships
+    kind: specialist
+    title: Contract Reviewer
+    model_tier: standard
+    capabilities: [contract_review, review]
+    purpose: Summarize obligations, risks and red flags. Not legal advice; never accepts terms.
+    escalate_when: [always before any signature]
+
+  # ---------------- TEAM 4: MEDIA PRODUCTION ----------------
+  - id: creative_director
+    team: media_production
+    kind: leader
+    title: Creative Director
+    model_tier: standard
+    capabilities: [triage, planning, canon_management]
+    purpose: Own approved story canon and production priorities for Kingdom of Shadows, After Dark, Elm City.
+    escalate_when: [canon changes, publishing]
+  - id: screenwriter
+    team: media_production
+    kind: specialist
+    title: Screenwriter
+    model_tier: standard
+    capabilities: [scriptwriting]
+    purpose: Write scenes and scripts consistent with the canon bible.
+    escalate_when: [contradicts canon]
+  - id: visual_director
+    team: media_production
+    kind: specialist
+    title: Visual Director
+    model_tier: routine
+    capabilities: [visual_design, character_sheets]
+    purpose: Maintain character reference sheets, shot lists and visual prompts for consistency.
+    escalate_when: [paid generation credits]
+  - id: video_pipeline_engineer
+    team: media_production
+    kind: specialist
+    title: Video Pipeline Engineer
+    model_tier: standard
+    capabilities: [video_pipeline]
+    purpose: Build the repeatable AI video pipeline (prompt -> generate -> edit -> QA) on verified tools.
+    escalate_when: [chargeable generation, publishing]
+  - id: continuity_reviewer
+    team: media_production
+    kind: specialist
+    title: Continuity Reviewer
+    model_tier: routine
+    capabilities: [continuity_review, review]
+    purpose: Check canon, character consistency, scene logic, and commercial usage rights.
+    escalate_when: [unclear license]
+
+  # ---------------- TEAM 5: INFRASTRUCTURE & INTELLIGENCE ----------------
+  - id: operations_director
+    team: infrastructure_intelligence
+    kind: leader
+    title: Operations Director
+    model_tier: standard
+    capabilities: [triage, planning, ops_reporting]
+    purpose: Run the workforce itself - budgets, daily report, integration status.
+    escalate_when: [spending, new subscriptions]
+  - id: resource_researcher
+    team: infrastructure_intelligence
+    kind: specialist
+    title: Resource Researcher
+    model_tier: routine
+    capabilities: [resource_research]
+    purpose: Inventory free credits and existing subscriptions with verified limits and sources.
+    escalate_when: [signup or payment needed]
+  - id: automation_engineer
+    team: infrastructure_intelligence
+    kind: specialist
+    title: Automation Engineer
+    model_tier: standard
+    capabilities: [automation]
+    purpose: Build safe, reversible automations and backups with read-back verification.
+    escalate_when: [deleting originals, credentials]
+  - id: security_reviewer
+    team: infrastructure_intelligence
+    kind: specialist
+    title: Security Reviewer
+    model_tier: standard
+    capabilities: [security_review, review]
+    purpose: Least-privilege review, secret hygiene, permission scope checks.
+    escalate_when: [any exposed secret]
+  - id: documentation_auditor
+    team: infrastructure_intelligence
+    kind: specialist
+    title: Documentation Auditor
+    model_tier: routine
+    capabilities: [documentation_audit, source_recovery]
+    purpose: Keep the shared APS project archive accurate; verify recovered sources.
+    escalate_when: [conflicting sources of truth]

@@ -1,0 +1,79 @@
+# First-day tasks, one per team, routed to each team leader.
+# `key` makes seeding idempotent: re-running `seed` never duplicates tasks.
+tasks:
+  - key: seed-sw-001
+    team: software_factory
+    title: Locate and inventory LocalVerse, APS Marketplace and Community One source code
+    capability: code_audit
+    action: analysis
+    risk: low
+    priority: 10
+    payload:
+      instructions: >
+        None of these apps is in the current workspace (only Apps/CineForge, aps-bitrix24-integration,
+        aps-tina, citizens-wealth-platform{,2}, paranormal-spooky-graveyard). List where each app's
+        source lives (GitHub repo, Lovable, Hercules, Drive), its last commit, build status, and the
+        gap to a customer-ready release. Rank by closeness to release. Do not touch aps-tina.
+
+  - key: seed-ca-001
+    team: customer_acquisition
+    title: LocalVerse $199 business page - ICP card and Scout search strings
+    capability: icp_strategy
+    action: draft
+    risk: medium
+    priority: 10
+    payload:
+      instructions: >
+        Offer: LocalVerse business page, $199 introductory ($99 deposit, $100 after preview).
+        Produce the ICP (local business types, size, geography), 5 public buying signals, search
+        strings for Google Maps / directories / new-business filings, and disqualifiers.
+
+  - key: seed-ca-002
+    team: customer_acquisition
+    title: Scout first batch of 15 local businesses with buying signals
+    capability: lead_discovery
+    action: research
+    risk: medium
+    priority: 5
+    depends_on_keys: [seed-ca-001]
+    payload:
+      requires_sources: true
+      instructions: >
+        Public sources only. Each row: business, website, signal + date, source URL, confidence,
+        qualification reason. Dedupe against the existing lead sheet.
+
+  - key: seed-bp-001
+    team: business_partnerships
+    title: Shortlist authorized supplier/affiliate programs for APS Marketplace
+    capability: partner_strategy
+    action: research
+    risk: low
+    priority: 10
+    payload:
+      instructions: >
+        Shortlist programs relevant to Marketplace and Community One. Label each term VERIFIED
+        (official terms page, with URL and date) or UNCONFIRMED. No applications or signups.
+
+  - key: seed-mp-001
+    team: media_production
+    title: Build the canon bible skeleton for Kingdom of Shadows, After Dark and Elm City
+    capability: canon_management
+    action: documentation
+    risk: low
+    priority: 10
+    payload:
+      instructions: >
+        Gather approved canon from existing APS materials into a bible: characters (with reference
+        image links), locations, timeline, rules of the world, and usage-rights status per asset.
+
+  - key: seed-ii-001
+    team: infrastructure_intelligence
+    title: Inventory existing AI subscriptions, free credits and integration access
+    capability: ops_reporting
+    action: analysis
+    risk: low
+    priority: 10
+    payload:
+      instructions: >
+        For Claude, Gemini/AI Studio, GitHub, Google Drive, Lovable, Hercules: list plan, limits,
+        renewal date, and whether access is TESTED from this workforce. Record names only, never keys.

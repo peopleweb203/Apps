@@ -1,0 +1,118 @@
+# APS AI Workforce - runtime configuration (prototype v1.0)
+# Every path is relative to this file's directory.
+
+workforce:
+  name: APS AI Workforce
+  version: "1.0"
+  # simulation: only non-networked mock providers may run.
+  # live: verified providers may run, still subject to budget + approvals.
+  mode: simulation
+
+concurrency:
+  max_slots: 5            # hard ceiling on concurrently executing agents
+  # Each team owns one "home" slot. A task may use another team's free slot
+  # only when the task was submitted with allow_borrow=true (explicit authorization).
+  slot_policy: team_home
+
+leases:
+  duration_seconds: 300   # a claimed task must finish or heartbeat within this window
+
+retries:
+  max_attempts: 3
+  backoff_seconds: 0      # simulation default; raise for live providers
+
+budget:
+  daily_usd: 5.00         # planning ceiling, NOT permission to spend
+  per_task_usd: 1.00      # planning ceiling, NOT permission to spend
+  # Providers whose chargeable calls are pre-authorized. Empty = every
+  # chargeable call needs a per-task human approval first.
+  authorized_chargeable_providers: []
+
+risk_policy:
+  low:    {validation: true, review: false, human_approval: false}
+  medium: {validation: true, review: true,  human_approval: false}
+  high:   {validation: true, review: true,  human_approval: true}
+
+# Actions that may never run without an explicit, recorded human approval.
+approval_required_actions:
+  - purchase
+  - production_deploy
+  - external_communication
+  - contract_commitment
+  - delete_original_data
+  - credential_change
+  - publish_content
+  - irreversible
+
+# Reversible, low-risk actions inside the team workspace. Any action that is
+# in neither list is treated as approval-required (default deny).
+preauthorized_actions:
+  - draft
+  - analysis
+  - research
+  - test
+  - documentation
+  - local_file_change
+
+paths:
+  state_db: state/workforce.db
+  workspaces: workspaces
+  shared_reference: shared_reference
+  reports: reports
+  # Never writable by any agent, regardless of task.
+  protected_paths:
+    - ../aps-tina
+
+providers:
+  default: mock
+  mock:
+    kind: mock
+    chargeable: false
+    verified: true
+  mock_paid:              # simulates a chargeable provider; makes no network calls
+    kind: mock
+    chargeable: true
+    verified: true
+    est_cost_usd: 0.25
+  anthropic:
+    kind: anthropic
+    chargeable: true
+    verified: false       # flip to true only after a supervised smoke test
+    models:
+      routine: claude-haiku-5-5
+      standard: claude-opus-5-5
+    est_cost_usd:
+      routine: 0.01
+      standard: 0.20
+
+teams:
+  software_factory:
+    name: Software Factory
+    leader: lead_engineer
+    reviewer: qa_engineer
+    mission: Audit, repair, test, and complete existing APS applications.
+    priorities: [LocalVerse, APS Marketplace, Community One components, other unfinished APS projects]
+  customer_acquisition:
+    name: Customer Acquisition
+    leader: sales_strategist
+    reviewer: compliance_reviewer
+    mission: Develop a measurable customer acquisition operation.
+    priorities: ["LocalVerse $199 business page ($99 deposit + $100 after preview)"]
+  business_partnerships:
+    name: Business Partnerships
+    leader: partnership_director
+    reviewer: contract_reviewer
+    mission: Research and develop authorized supplier, reseller, affiliate, and integration opportunities.
+    priorities: [APS Marketplace, Community One, authorized telecom/service distribution, business software suppliers]
+  media_production:
+    name: Media Production
+    leader: creative_director
+    reviewer: continuity_reviewer
+    mission: Build reusable production assets and workflows for APS entertainment properties.
+    priorities: [Kingdom of Shadows, After Dark, Elm City continuity, AI video pipeline, character consistency, AI influencer campaigns]
+  infrastructure_intelligence:
+    name: Infrastructure & Intelligence
+    leader: operations_director
+    reviewer: security_reviewer
+    mission: Optimize APS infrastructure, AI subscriptions, resource usage, automation, backups, and efficiency.
+    priorities: [free credits and existing subscriptions, safe automation, verified source recovery, shared project archive, lean usage monitoring]

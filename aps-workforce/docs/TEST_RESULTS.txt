@@ -1,0 +1,37 @@
+# Acceptance test run 2026-11-14T08:40:04Z
+test_approval_is_bound_to_one_task (test_acceptance.TestApprovals.test_approval_is_bound_to_one_task) ... ok
+test_external_communication_cannot_execute_without_approval (test_acceptance.TestApprovals.test_external_communication_cannot_execute_without_approval) ... ok
+test_high_risk_requires_validation_review_and_human_signoff (test_acceptance.TestApprovals.test_high_risk_requires_validation_review_and_human_signoff) ... ok
+test_rejected_action_is_blocked (test_acceptance.TestApprovals.test_rejected_action_is_blocked) ... ok
+test_unknown_action_defaults_to_approval_required (test_acceptance.TestApprovals.test_unknown_action_defaults_to_approval_required) ... ok
+test_no_more_than_five_slots_can_be_claimed (test_acceptance.TestConcurrency.test_no_more_than_five_slots_can_be_claimed) ... ok
+test_parallel_run_never_exceeds_limit (test_acceptance.TestConcurrency.test_parallel_run_never_exceeds_limit) ... ok
+test_team_cannot_take_second_slot_without_authorization (test_acceptance.TestConcurrency.test_team_cannot_take_second_slot_without_authorization) ... ok
+test_daily_ceiling_blocks (test_acceptance.TestCostGuard.test_daily_ceiling_blocks) ... ok
+test_per_task_ceiling_blocks_even_with_approval (test_acceptance.TestCostGuard.test_per_task_ceiling_blocks_even_with_approval) ... ok
+test_unauthorized_chargeable_call_is_blocked_until_approved (test_acceptance.TestCostGuard.test_unauthorized_chargeable_call_is_blocked_until_approved) ... ok
+test_unverified_live_provider_is_never_called (test_acceptance.TestCostGuard.test_unverified_live_provider_is_never_called) ... ok
+test_crashed_worker_lease_is_recovered_and_task_resumes (test_acceptance.TestPersistence.test_crashed_worker_lease_is_recovered_and_task_resumes) ... ok
+test_idempotent_submission (test_acceptance.TestPersistence.test_idempotent_submission) ... ok
+test_results_survive_restart (test_acceptance.TestPersistence.test_results_survive_restart) ... ok
+test_stale_worker_cannot_overwrite_recovered_task (test_acceptance.TestPersistence.test_stale_worker_cannot_overwrite_recovered_task) ... ok
+test_exactly_five_active_leaders_and_twenty_standby_specialists (test_acceptance.TestRegistry.test_exactly_five_active_leaders_and_twenty_standby_specialists) ... ok
+test_registration_is_idempotent_across_restarts (test_acceptance.TestRegistry.test_registration_is_idempotent_across_restarts) ... ok
+test_dependent_waits_for_predecessor (test_acceptance.TestRetry.test_dependent_waits_for_predecessor) ... ok
+test_failed_dependency_blocks_dependent (test_acceptance.TestRetry.test_failed_dependency_blocks_dependent) ... ok
+test_fatal_error_does_not_retry (test_acceptance.TestRetry.test_fatal_error_does_not_retry) ... ok
+test_invalid_output_is_not_reported_complete (test_acceptance.TestRetry.test_invalid_output_is_not_reported_complete) ... ok
+test_retries_are_bounded_and_escalate (test_acceptance.TestRetry.test_retries_are_bounded_and_escalate) ... ok
+test_transient_failures_retry_then_succeed (test_acceptance.TestRetry.test_transient_failures_retry_then_succeed) ... ok
+test_medium_risk_gets_independent_review (test_acceptance.TestSpecialistActivation.test_medium_risk_gets_independent_review) ... ok
+test_review_rejection_triggers_bounded_rework (test_acceptance.TestSpecialistActivation.test_review_rejection_triggers_bounded_rework) ... ok
+test_specialist_activates_for_task_and_returns_to_standby (test_acceptance.TestSpecialistActivation.test_specialist_activates_for_task_and_returns_to_standby) ... ok
+test_agents_cannot_write_to_tina_or_outside_workspace (test_acceptance.TestTinaIsolation.test_agents_cannot_write_to_tina_or_outside_workspace) ... ok
+test_shared_reference_is_read_only_for_agents (test_acceptance.TestTinaIsolation.test_shared_reference_is_read_only_for_agents) ... ok
+test_every_output_traces_to_a_task (test_acceptance.TestTraceability.test_every_output_traces_to_a_task) ... ok
+test_tina_fingerprint_unchanged (test_acceptance.TestZZTinaUntouched.test_tina_fingerprint_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 2.235s
+
+OK
