@@ -7,11 +7,11 @@ human approval gates, a cost guard, and durable, crash-recoverable task state.
 It runs **separately from Tina**. `../aps-tina` is a protected path that no agent can write to,
 and the test suite checks that its contents are byte-identical before and after.
 
-> **Status:** working prototype in **simulation mode** (mock agents). 36 tests: 31 acceptance
-> tests plus 5 that run the Claude adapter through the real `anthropic` SDK against a local
-> stand-in API (no network, no cost). Mock agents make no model calls, so every output they
-> produce is labeled `SIMULATED`. The Claude adapter has **not yet made a real API call**:
-> run `smoke_test.py` on your machine to verify it (see *Going live*).
+> **Status:** 53 tests pass on this machine, including the Tina-protection check against the
+> real `aps-tina` checkout. One agent does real work today at no cost: the **QA Engineer**,
+> using the `local_test` provider, which runs a repo's own test suite in a sandbox copy. Every
+> model-backed role is still waiting for the supervised Claude test (`smoke_test.py`); until
+> then mock outputs are labeled `SIMULATED` and count as nothing.
 
 ## Quick start
 
@@ -52,6 +52,8 @@ one stopped.
 | `approval_manager.py` | Human approval queue bound to (task, action); default-deny for unknown actions |
 | `resource_budget.py` | Cost guard ($1/task, $5/day ceilings; chargeable calls need pre-authorization or per-task approval) + usage ledger |
 | `agent_runner.py` | Provider adapters (Mock, Anthropic), workspace isolation guard, output validation, artifact rendering |
+| `repo_sandbox.py` | Tina protection by repository identity; private sandbox clones; test runner with secrets stripped |
+| `deployment.yaml` / `deployment.py` | Who owns which work on which repos; `deploy plan` validates, `deploy apply` queues first tasks |
 | `seed_tasks.yaml` | First-day tasks per team |
 | `tests/test_acceptance.py` | 31 acceptance tests |
 | `tests/test_anthropic_adapter.py` | 5 offline tests of the Claude adapter via the real SDK and a local stand-in API |
@@ -101,5 +103,30 @@ prints the model that served the call, the measured cost and the output. If the 
 right, set `providers.anthropic.verified: true` and `workforce.mode: live` in
 `workforce_config.yaml`.
 
-The Tina-isolation test is skipped inside this repo because `../aps-tina` is not next to
-`aps-workforce/` here. On your machine, set `paths.protected_paths` to Tina's real location.
+## Tina protection
+
+Tina's source of truth is `github.com/peopleweb203/aps-tina`. The workforce protects it two ways:
+
+- **By identity:** any git checkout whose remote is `peopleweb203/aps-tina` is protected,
+  wherever it sits on disk and whatever the folder is called.
+- **By path:** `paths.protected_paths` lists candidate locations (`../aps-tina`,
+  `../../aps-tina`); add your machine's path there or in `APS_PROTECTED_PATHS`.
+
+The orchestrator refuses to start, create a workspace, write a file, accept a task, or accept a
+deployment that touches a protected repo. Agents work only in private clones of *allowed*
+repos (`repos:` in the config), on a `workforce/<task_id>` branch with pushing disabled.
+
+## Deployment
+
+```bash
+python3 orchestrator.py deploy plan     # validate + show what is READY vs waiting
+python3 orchestrator.py deploy apply    # queue first tasks for READY assignments (idempotent)
+python3 orchestrator.py run
+```
+
+Run a test suite through the QA Engineer at any time (no model, $0):
+
+```bash
+python3 orchestrator.py submit --team software_factory --capability testing --action test \
+  --title "Run Bitrix tests" --repo peopleweb203/aps-bitrix24-integration --provider local_test --qa-report
+```

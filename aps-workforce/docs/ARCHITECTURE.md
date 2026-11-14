@@ -120,7 +120,9 @@ is temporary.
 
 | Integration | Status | What's needed |
 |---|---|---|
-| Mock providers | **Tested** (31 tests) | - |
+| Mock providers | **Tested** | - |
+| `local_test` provider (sandboxed test runs) | **Tested and used for real**: Bitrix24 suite 28/28, workforce suite 53 tests, $0 | - |
+| Coding agent (edit code, run commands) | **Not built.** Model roles can analyse and draft only | Add a tool-using adapter (Claude Code headless or the Claude Agent SDK) that works inside the sandbox clone; verify before enabling |
 | Anthropic Claude API | Adapter checked against `anthropic` SDK 2.8.0 and **tested offline** against a local stand-in API (request shape, haiku/opus routing, server-side fallback, refusal → fatal, 429 → bounded retry, measured cost). **No real API call yet**: Claude Code cloud sessions can't hold a user key for api.anthropic.com | Run `smoke_test.py` on your machine, then set `verified: true`, `mode: live` |
 | GitHub | This Claude Code session has GitHub access scoped to 6 peopleweb203 repos; **not wired into the workforce** | Fine-grained token (read-only first) + a `github` adapter for Team 1 |
 | Google Drive | Not connected in this session; **untested** | Service account or OAuth; adapter for shared archive/backups |
@@ -131,7 +133,7 @@ is temporary.
 
 ## 6. Safe deployment plan
 
-1. **Day 1 (done here):** simulation mode, mock agents, 31/31 acceptance tests, isolated directory, Tina untouched.
+1. **Done:** simulation mode, 53 tests, Tina protected by repo identity, QA Engineer running real test suites at $0.
 2. **Move to a durable home:** commit `aps-workforce/` to its own repo or branch (not Tina's),
    run it on your machine, and schedule `run` every 5 minutes. This cloud session's
    container is temporary.

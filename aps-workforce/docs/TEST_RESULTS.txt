@@ -1,4 +1,4 @@
-# Test run 2026-11-14T10:23:58Z (location: peopleweb203/Apps/aps-workforce, anthropic SDK 2.8.0)
+# Test run 2026-11-14T10:31:27Z - /home/user/Apps/aps-workforce, real aps-tina at /home/user/aps-tina, anthropic SDK 2.8.0
 test_approval_is_bound_to_one_task (test_acceptance.TestApprovals.test_approval_is_bound_to_one_task) ... ok
 test_external_communication_cannot_execute_without_approval (test_acceptance.TestApprovals.test_external_communication_cannot_execute_without_approval) ... ok
 test_high_risk_requires_validation_review_and_human_signoff (test_acceptance.TestApprovals.test_high_risk_requires_validation_review_and_human_signoff) ... ok
@@ -29,16 +29,31 @@ test_specialist_activates_for_task_and_returns_to_standby (test_acceptance.TestS
 test_agents_cannot_write_to_tina_or_outside_workspace (test_acceptance.TestTinaIsolation.test_agents_cannot_write_to_tina_or_outside_workspace) ... ok
 test_shared_reference_is_read_only_for_agents (test_acceptance.TestTinaIsolation.test_shared_reference_is_read_only_for_agents) ... ok
 test_every_output_traces_to_a_task (test_acceptance.TestTraceability.test_every_output_traces_to_a_task) ... ok
-test_tina_fingerprint_unchanged (test_acceptance.TestZZTinaUntouched.test_tina_fingerprint_unchanged) ... skipped 'aps-tina not present in this workspace'
-  def construct_yaml_map(self, node):
-  def construct_yaml_map(self, node):
+test_tina_fingerprint_unchanged (test_acceptance.TestZZTinaUntouched.test_tina_fingerprint_unchanged) ... ok
+  for level in list(self.possible_simple_keys):
+  for level in list(self.possible_simple_keys):
 ok
 test_rate_limit_is_recoverable (test_anthropic_adapter.TestAnthropicAdapterOffline.test_rate_limit_is_recoverable) ... ok
 test_refusal_is_fatal_and_escalates (test_anthropic_adapter.TestAnthropicAdapterOffline.test_refusal_is_fatal_and_escalates) ... ok
 test_simulation_mode_still_refuses_live_provider (test_anthropic_adapter.TestAnthropicAdapterOffline.test_simulation_mode_still_refuses_live_provider) ... ok
 test_standard_tier_uses_opus_with_server_side_fallback (test_anthropic_adapter.TestAnthropicAdapterOffline.test_standard_tier_uses_opus_with_server_side_fallback) ... ok
-
+test_apply_queues_only_ready_work_and_is_idempotent (test_protection_deploy.TestDeployment.test_apply_queues_only_ready_work_and_is_idempotent) ... ok
+test_deployment_cannot_assign_tina (test_protection_deploy.TestDeployment.test_deployment_cannot_assign_tina) ... ok
+test_deployment_cannot_make_sensitive_actions_autonomous (test_protection_deploy.TestDeployment.test_deployment_cannot_make_sensitive_actions_autonomous) ... ok
+test_model_backed_assignments_wait_in_simulation_mode (test_protection_deploy.TestDeployment.test_model_backed_assignments_wait_in_simulation_mode) ... ok
+test_role_must_have_the_capability_and_team (test_protection_deploy.TestDeployment.test_role_must_have_the_capability_and_team) ... ok
+test_shipped_deployment_is_valid_and_covers_six_areas (test_protection_deploy.TestDeployment.test_shipped_deployment_is_valid_and_covers_six_areas) ... ok
+test_failing_suite_claim_vs_qa_report (test_protection_deploy.TestSandboxedTestRuns.test_failing_suite_claim_vs_qa_report) ... ok
+test_failing_tests_cannot_be_reported_as_working (test_protection_deploy.TestSandboxedTestRuns.test_failing_tests_cannot_be_reported_as_working) ... ok
+test_git_works_inside_sandbox_commands_despite_partial_git_config_env (test_protection_deploy.TestSandboxedTestRuns.test_git_works_inside_sandbox_commands_despite_partial_git_config_env) ... ok
+test_real_test_run_produces_non_simulated_evidence_and_leaves_source_untouched (test_protection_deploy.TestSandboxedTestRuns.test_real_test_run_produces_non_simulated_evidence_and_leaves_source_untouched) ... ok
+test_secrets_are_not_passed_to_test_commands (test_protection_deploy.TestSandboxedTestRuns.test_secrets_are_not_passed_to_test_commands) ... ok
+test_any_clone_of_tina_is_protected_wherever_it_lives (test_protection_deploy.TestTinaProtectionByIdentity.test_any_clone_of_tina_is_protected_wherever_it_lives) ... ok
+test_new_sensitive_actions_need_approval (test_protection_deploy.TestTinaProtectionByIdentity.test_new_sensitive_actions_need_approval) ... ok
+test_orchestrator_refuses_to_start_inside_tina (test_protection_deploy.TestTinaProtectionByIdentity.test_orchestrator_refuses_to_start_inside_tina) ... ok
+test_shipped_config_finds_the_real_tina_checkout (test_protection_deploy.TestTinaProtectionByIdentity.test_shipped_config_finds_the_real_tina_checkout) ... ok
+test_tasks_targeting_tina_or_unlisted_repos_are_refused (test_protection_deploy.TestTinaProtectionByIdentity.test_tasks_targeting_tina_or_unlisted_repos_are_refused) ... ok
+test_workspace_inside_a_tina_clone_is_refused (test_protection_deploy.TestTinaProtectionByIdentity.test_workspace_inside_a_tina_clone_is_refused) ... ok
 ----------------------------------------------------------------------
-Ran 36 tests in 3.314s
-
-OK (skipped=1)
+Ran 53 tests in 5.934s
+OK
