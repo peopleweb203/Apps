@@ -165,7 +165,9 @@ class AnthropicAdapter:
 
     def _call(self, model: str, system: str, user: str, effort: str):
         import anthropic
-        client = anthropic.Anthropic()
+        # The orchestrator owns retries; keep SDK-level retries small and configurable.
+        client = anthropic.Anthropic(max_retries=int(self.cfg.get("max_retries", 2)),
+                                     timeout=float(self.cfg.get("timeout_seconds", 600)))
         kwargs = dict(model=model, max_tokens=16000, system=system,
                       messages=[{"role": "user", "content": user}],
                       output_config={"effort": effort})

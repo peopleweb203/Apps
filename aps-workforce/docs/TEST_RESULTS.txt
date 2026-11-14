@@ -1,4 +1,4 @@
-# Acceptance test run 2026-11-14T08:40:04Z
+# Test run 2026-11-14T10:23:58Z (location: peopleweb203/Apps/aps-workforce, anthropic SDK 2.8.0)
 test_approval_is_bound_to_one_task (test_acceptance.TestApprovals.test_approval_is_bound_to_one_task) ... ok
 test_external_communication_cannot_execute_without_approval (test_acceptance.TestApprovals.test_external_communication_cannot_execute_without_approval) ... ok
 test_high_risk_requires_validation_review_and_human_signoff (test_acceptance.TestApprovals.test_high_risk_requires_validation_review_and_human_signoff) ... ok
@@ -29,9 +29,16 @@ test_specialist_activates_for_task_and_returns_to_standby (test_acceptance.TestS
 test_agents_cannot_write_to_tina_or_outside_workspace (test_acceptance.TestTinaIsolation.test_agents_cannot_write_to_tina_or_outside_workspace) ... ok
 test_shared_reference_is_read_only_for_agents (test_acceptance.TestTinaIsolation.test_shared_reference_is_read_only_for_agents) ... ok
 test_every_output_traces_to_a_task (test_acceptance.TestTraceability.test_every_output_traces_to_a_task) ... ok
-test_tina_fingerprint_unchanged (test_acceptance.TestZZTinaUntouched.test_tina_fingerprint_unchanged) ... ok
+test_tina_fingerprint_unchanged (test_acceptance.TestZZTinaUntouched.test_tina_fingerprint_unchanged) ... skipped 'aps-tina not present in this workspace'
+  def construct_yaml_map(self, node):
+  def construct_yaml_map(self, node):
+ok
+test_rate_limit_is_recoverable (test_anthropic_adapter.TestAnthropicAdapterOffline.test_rate_limit_is_recoverable) ... ok
+test_refusal_is_fatal_and_escalates (test_anthropic_adapter.TestAnthropicAdapterOffline.test_refusal_is_fatal_and_escalates) ... ok
+test_simulation_mode_still_refuses_live_provider (test_anthropic_adapter.TestAnthropicAdapterOffline.test_simulation_mode_still_refuses_live_provider) ... ok
+test_standard_tier_uses_opus_with_server_side_fallback (test_anthropic_adapter.TestAnthropicAdapterOffline.test_standard_tier_uses_opus_with_server_side_fallback) ... ok
 
 ----------------------------------------------------------------------
-Ran 31 tests in 2.235s
+Ran 36 tests in 3.314s
 
-OK
+OK (skipped=1)

@@ -121,7 +121,7 @@ is temporary.
 | Integration | Status | What's needed |
 |---|---|---|
 | Mock providers | **Tested** (31 tests) | - |
-| Anthropic Claude API | Adapter written against the official `anthropic` SDK; **not tested**: SDK not installed and no API key in this environment; `verified: false` | Install SDK, add key to `.env`, run one supervised low-cost task, then set `verified: true`, `mode: live` |
+| Anthropic Claude API | Adapter checked against `anthropic` SDK 2.8.0 and **tested offline** against a local stand-in API (request shape, haiku/opus routing, server-side fallback, refusal → fatal, 429 → bounded retry, measured cost). **No real API call yet**: Claude Code cloud sessions can't hold a user key for api.anthropic.com | Run `smoke_test.py` on your machine, then set `verified: true`, `mode: live` |
 | GitHub | This Claude Code session has GitHub access scoped to 6 peopleweb203 repos; **not wired into the workforce** | Fine-grained token (read-only first) + a `github` adapter for Team 1 |
 | Google Drive | Not connected in this session; **untested** | Service account or OAuth; adapter for shared archive/backups |
 | Gemini / Google AI Studio | No adapter; **untested** | `GEMINI_API_KEY` + adapter implementing `available/estimate/run/review` |
@@ -137,9 +137,9 @@ is temporary.
    container is temporary.
 3. **Load real context:** put the LocalVerse offer, ICP and canon materials in
    `shared_reference/`, then re-seed.
-4. **Supervised live smoke test:** install `anthropic`, add the key, set `mode: live` and
-   `providers.anthropic.verified: true`, then run **one** low-risk routine task. Approve its
-   `chargeable_operation`, check the cost in `usage`, and read the output.
+4. **Supervised live smoke test:** on your machine, run `python3 smoke_test.py`. It makes one
+   approved, low-cost call and prints the model, the measured cost and the output. Then set
+   `mode: live` and `providers.anthropic.verified: true`.
 5. **Go live per team, one at a time:** start with Customer Acquisition drafts (all sends stay
    manual), then Infrastructure. Keep `authorized_chargeable_providers` empty until a week of
    spend data shows stable costs.

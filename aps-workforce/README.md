@@ -7,10 +7,11 @@ human approval gates, a cost guard, and durable, crash-recoverable task state.
 It runs **separately from Tina**. `../aps-tina` is a protected path that no agent can write to,
 and the test suite checks that its contents are byte-identical before and after.
 
-> **Status:** working prototype in **simulation mode** (mock agents). All 31 acceptance tests
-> pass. Mock agents make no model calls, so every output they produce is labeled `SIMULATED`,
-> and nothing they produce is evidence of real work. The Claude adapter is written but
-> deliberately **disabled and unverified** (see *Integration gaps*).
+> **Status:** working prototype in **simulation mode** (mock agents). 36 tests: 31 acceptance
+> tests plus 5 that run the Claude adapter through the real `anthropic` SDK against a local
+> stand-in API (no network, no cost). Mock agents make no model calls, so every output they
+> produce is labeled `SIMULATED`. The Claude adapter has **not yet made a real API call**:
+> run `smoke_test.py` on your machine to verify it (see *Going live*).
 
 ## Quick start
 
@@ -53,6 +54,8 @@ one stopped.
 | `agent_runner.py` | Provider adapters (Mock, Anthropic), workspace isolation guard, output validation, artifact rendering |
 | `seed_tasks.yaml` | First-day tasks per team |
 | `tests/test_acceptance.py` | 31 acceptance tests |
+| `tests/test_anthropic_adapter.py` | 5 offline tests of the Claude adapter via the real SDK and a local stand-in API |
+| `smoke_test.py` | Supervised live test: one approved, low-cost real Claude call |
 | `docs/ARCHITECTURE.md` | Architecture, dashboard spec, resource requirements, integration gaps, deployment plan |
 
 ## Rules that the code enforces (not just documents)
@@ -80,3 +83,23 @@ one stopped.
 - **Traceability.** Every artifact lives in `workspaces/<team>/tasks/<task_id>/attempt-<n>/`.
   Each file opens with a header holding its task ID, and is recorded with its SHA-256 and a
   read-back check. Every usage row and audit event carries a task ID.
+
+## Going live (supervised smoke test)
+
+On your own machine:
+
+```bash
+pip install anthropic pyyaml
+cp .env.example .env            # set ANTHROPIC_API_KEY=... (never commit .env)
+python3 smoke_test.py
+```
+
+The script uses a separate database (`state/smoke.db`) and switches on live mode for its own
+run only. It submits one low-risk task (Resource Researcher → `claude-haiku-5-5`, estimated
+$0.01) and stops at the cost guard until you type your name to approve the charge. Then it
+prints the model that served the call, the measured cost and the output. If the output looks
+right, set `providers.anthropic.verified: true` and `workforce.mode: live` in
+`workforce_config.yaml`.
+
+The Tina-isolation test is skipped inside this repo because `../aps-tina` is not next to
+`aps-workforce/` here. On your machine, set `paths.protected_paths` to Tina's real location.
